@@ -19,7 +19,7 @@
 
 Полное описание условий задания можно найти [тут](https://github.com/kamilarakhimova/hse-kpo-hw4/blob/main/Условие%20дз4-КПО-2023.pdf).
 
-В самом начале нам необходимо создать в папке [databases](https://github.com/kamilarakhimova/hse-kpo-hw4/blob/main/databases) базы данных "users.db" и "dishes_orders.db" (при их отсутствии) для дальнейшей корректной работы микросервисов. Сделаем это одним действием, запустив программу [main.py](https://github.com/kamilarakhimova/hse-kpo-hw4/blob/main/main.py) следующей командой в терминале:
+В самом начале нам необходимо создать в папке [databases](https://github.com/kamilarakhimova/hse-kpo-hw4/blob/main/databases) базы данных "users.db" и "dishes_orders.db" (при их отсутствии при первичном запуске) для дальнейшей корректной работы микросервисов. Сделаем это одним действием, запустив программу [main.py](https://github.com/kamilarakhimova/hse-kpo-hw4/blob/main/main.py) следующей командой в терминале:
 ```
 $ python3 main.py
 ```
