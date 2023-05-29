@@ -36,7 +36,7 @@ def registration():
         username, password = info['username'], info['password']
         email, role = info['email'], info['role']
     except (TypeError, ValueError, SyntaxError):
-        return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :(\n Повторите попытку'}), 400
+        return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :(\n Повторите попытку.'}), 400
     # проверяем email на валидность
     if not is_email_valid(email):
         return jsonify({'answer': 'Увы, адрес электронной почты некорректен :(\n Повторите попытку.'}), 400
@@ -64,7 +64,7 @@ def authorization():
     try:
         email, password = info['email'], info['password']
     except (TypeError, ValueError, SyntaxError):
-        return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :(\n Повторите попытку'}), 400
+        return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :(\n Повторите попытку.'}), 400
     try:
         sql_query = f'''SELECT * FROM user WHERE email = {email}'''
         cursor_db1.execute(sql_query)
@@ -111,6 +111,6 @@ def page_not_found():
 
 if __name__ == '__main__':
     # create_db1.create_database1()
-    app1.run(debug=True, port=5000, host="127.0.0.1")  # убрать потом debug=True
+    app1.run(debug=False, port=5000, host="127.0.0.1")
     cursor_db1.close()
     db_lp1.close()
