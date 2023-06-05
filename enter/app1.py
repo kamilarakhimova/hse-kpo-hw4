@@ -36,16 +36,16 @@ def registration():
         username, password = info['username'], info['password']
         email, role = info['email'], info['role']
     except (TypeError, ValueError, SyntaxError):
-        return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :(\n Повторите попытку.'}), 400
+        return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
     # проверяем email на валидность
     if not is_email_valid(email):
-        return jsonify({'answer': 'Увы, адрес электронной почты некорректен :(\n Повторите попытку.'}), 400
+        return jsonify({'answer': 'Увы, адрес электронной почты некорректен :( Повторите попытку.'}), 400
     # хэшируем пароль
     password_hash = get_hash(password)
     # пытаемся добавить данные о новом пользователе в БД
     try:
-        sql_query = f'''SELECT * FROM user WHERE email = "{email}"'''
-        cursor_db1.execute(sql_query)
+        sql_query = '''SELECT * FROM user WHERE email = ?'''
+        cursor_db1.execute(sql_query, (email,))
         records = cursor_db1.fetchall()
         if len(records):
             return jsonify({'answer': 'Ого, так Вы уже зарегистpированы!'}), 403
@@ -54,7 +54,7 @@ def registration():
         db_lp1.commit()
         return jsonify({'answer': 'Ура, регистрация прошла успешно!'}), 200
     except Error:
-        return jsonify({'answer': 'Увы, Вас не удалось зарегистрировать :(\n Повторите попытку.'}), 400
+        return jsonify({'answer': 'Увы, Вас не удалось зарегистрировать :( Повторите попытку.'}), 400
 
 
 @app1.route('/authorization', methods=['POST'])
@@ -64,37 +64,38 @@ def authorization():
     try:
         email, password = info['email'], info['password']
     except (TypeError, ValueError, SyntaxError):
-        return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :(\n Повторите попытку.'}), 400
+        return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
     try:
-        sql_query = f'''SELECT * FROM user WHERE email = {email}'''
-        cursor_db1.execute(sql_query)
+        sql_query = '''SELECT * FROM user WHERE email = ?'''
+        cursor_db1.execute(sql_query, (email, ))
         user = cursor_db1.fetchone()
         if user and user[3] == get_hash(password):
             user_id = user[0]
             token_secret = 'got-a-secret-can-you-keep-it-swear-this-one-you-ll-save-better-lock-it-in-your-pocket'
             # генерируем "session jwt token", используемый для аутентификации
-            session_jwt_token = jwt.encode(payload=info, secret=token_secret, algorithm='HS256')
+            session_jwt_token = jwt.encode(payload=info, key=token_secret, algorithm='HS256')
             # продлеваем срок действия сеанса на один день
             expires_at = str(datetime.datetime.now() + datetime.timedelta(days=1))
             sql_insert = '''INSERT INTO session (user_id, session_token, expires_at) VALUES (?, ?, ?)'''
             cursor_db1.execute(sql_insert,  (user_id, session_jwt_token, expires_at))
             db_lp1.commit()
-            return jsonify({'answer': 'Ура, авторизация прошла успешно!'}), 200
+            return jsonify({'answer': 'Ура, авторизация прошла успешно!', 'jwt_token': session_jwt_token}), 200
         else:
-            return jsonify({'answer': 'Увы, почта или пароль введены неверно :(\n Повторите попытку.'}), 401
+            return jsonify({'answer': 'Увы, почта или пароль введены неверно :( Повторите попытку.'}), 401
     except Error:
-        return jsonify({'answer': 'Увы, Вас не удалось авторизовать :(\n Повторите попытку.'}), 401
+        return jsonify({'answer': 'Увы, Вас не удалось авторизовать :( Повторите попытку.'}), 401
 
 
 @app1.route('/user', methods=['GET'])
 def user_info():
     # выдаём информацию о пользователе по токену
-    token = request.headers.get('Authorization')
+    session_token = request.get_json()
+    token = session_token['jwt token']
     sql_query = '''
     SELECT curr_u.id, curr_u.username, curr_u.email, curr_u.role, curr_u.created_at
     FROM user curr_u
     INNER JOIN session curr_s ON curr_s.user_id = curr_u.id
-    WHERE curr_s.session_token = ? AND CURRENT TIMESTAMP < curr_s.expires_at
+    WHERE curr_s.session_token = ? AND CURRENT_TIMESTAMP < curr_s.expires_at
     '''
     cursor_db1.execute(sql_query, (token, ))
     user = cursor_db1.fetchone()
@@ -107,6 +108,11 @@ def user_info():
 @app1.errorhandler(404)
 def page_not_found():
     return jsonify({'error': 'Увы, страница не найдена :('}), 404
+
+
+@app1.errorhandler(500)
+def page_not_found():
+    return jsonify({'error': 'Увы, сервер приболел :( Подождите, поэалуйста, скоро его починят'}), 500
 
 
 if __name__ == '__main__':
