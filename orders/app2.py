@@ -26,7 +26,7 @@ def create_order():
         created_at = str(datetime.datetime.now())
         status = 'processing'
     except (TypeError, ValueError, SyntaxError):
-        return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :(\n Повторите попытку.'}), 400
+        return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
     # проверяем существование пользователя с данным "user_id"
     sql_query = '''SELECT * FROM user WHERE id = ?'''
     cursor_db1.execute(sql_query, (user_id, ))
@@ -38,7 +38,7 @@ def create_order():
         try:
             dish_id, dish_quantity = dish['id'], dish['quantity']
         except (TypeError, ValueError, SyntaxError):
-            return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :(\n Повторите попытку.'}), 400
+            return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
         sql_query = '''SELECT * FROM dish WHERE id = ?'''
         cursor_db2.execute(sql_query, (dish_id, ))
         dish_db = cursor_db2.fetchone()
@@ -72,7 +72,7 @@ def create_order():
             db_lp2.commit()
         return jsonify({'answer': 'Ура, заказ создан успешно!'}), 201
     except Error:
-        return jsonify({'answer': 'Увы, не удалось создать Ваш заказ :(\n Повторите попытку.'}), 400
+        return jsonify({'answer': 'Увы, не удалось создать Ваш заказ :( Повторите попытку.'}), 400
 
 
 @app2.route('/process_order', methods=['POST'])
@@ -84,7 +84,7 @@ def process_order():
     # начинаем готовить заказы
     for order in orders:
         order_id = order[0]
-        time.sleep(3)
+        time.sleep(2)
         updated_at = str(datetime.datetime.now())
         cursor_db2.execute("UPDATE orders SET status = ? WHERE id = ?", ('cooking', order_id))
         cursor_db2.execute("UPDATE orders SET updated_at = ? WHERE id = ?", (updated_at, order_id))
@@ -92,7 +92,7 @@ def process_order():
     # заканчиваем готовить заказы
     for order in orders:
         order_id = order[0]
-        time.sleep(5)
+        time.sleep(3)
         updated_at = str(datetime.datetime.now())
         cursor_db2.execute("UPDATE orders SET status = ? WHERE id = ?", ('done', order_id))
         cursor_db2.execute("UPDATE orders SET updated_at = ? WHERE id = ?", (updated_at, order_id))
@@ -107,7 +107,7 @@ def order_info():
     try:
         order_id = info['order_id']
     except (TypeError, ValueError, SyntaxError):
-        return jsonify({'answer': 'Увы, либо поле "order_id" не заполнено, либо заполнено некорректно :(\n Повторите попытку.'}), 400
+        return jsonify({'answer': 'Увы, либо поле "order_id" не заполнено, либо заполнено некорректно :( Повторите попытку.'}), 400
     sql_query = '''SELECT * FROM orders WHERE id = ?'''
     cursor_db2.execute(sql_query, (order_id, ))
     order = cursor_db2.fetchone()
@@ -125,7 +125,7 @@ def manage_dishes():
     try:
         user_id = info['user_id']
     except (TypeError, ValueError, SyntaxError):
-        return jsonify({'answer': 'Увы, либо поле "user_id" не заполнено, либо заполнено некорректно :(\n Повторите попытку.'}), 400
+        return jsonify({'answer': 'Увы, либо поле "user_id" не заполнено, либо заполнено некорректно :( Повторите попытку.'}), 400
     sql_query = '''SELECT * FROM user WHERE id = ?'''
     cursor_db1.execute(sql_query, (user_id,))
     user = cursor_db1.fetchone()
@@ -138,7 +138,7 @@ def manage_dishes():
         try:
             dish_id = info['dish_id']
         except (TypeError, ValueError, SyntaxError):
-            return jsonify({'answer': 'Увы, либо поле "dish_id" не заполнено, либо заполнено некорректно :(\n Повторите попытку.'}), 400
+            return jsonify({'answer': 'Увы, либо поле "dish_id" не заполнено, либо заполнено некорректно :( Повторите попытку.'}), 400
         sql_query = '''SELECT * FROM dish WHERE id = ?'''
         cursor_db2.execute(sql_query, (dish_id,))
         dish = cursor_db2.fetchone()
@@ -152,7 +152,7 @@ def manage_dishes():
             name, description = info['name'], info['description']
             price, quantity = info['price'], info['quantity']
         except (TypeError, ValueError, SyntaxError):
-            return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :(\n Повторите попытку.'}), 400
+            return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
         is_available = False
         if quantity > 0:
             is_available = True
@@ -166,7 +166,7 @@ def manage_dishes():
             dish_id, name, description = info['dish_id'], info['name'], info['description']
             price, quantity = info['price'], info['quantity']
         except (TypeError, ValueError, SyntaxError):
-            return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :(\n Повторите попытку.'}), 400
+            return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
         is_available = False
         if quantity > 0:
             is_available = True
@@ -179,7 +179,7 @@ def manage_dishes():
         try:
             dish_id = info['dish_id']
         except (TypeError, ValueError, SyntaxError):
-            return jsonify({'answer': 'Увы, либо поле "dish_id" не заполнено, либо заполнено некорректно :(\n Повторите попытку.'}), 400
+            return jsonify({'answer': 'Увы, либо поле "dish_id" не заполнено, либо заполнено некорректно :( Повторите попытку.'}), 400
         sql_query = '''SELECT * FROM dish WHERE id = ?'''
         cursor_db2.execute(sql_query, (dish_id, ))
         dish = cursor_db2.fetchone()
@@ -194,8 +194,8 @@ def manage_dishes():
 @app2.route('/menu', methods=['GET'])
 def menu_info():
     # выдаём информацию о доступных блюдах в меню
-    sql_query = '''SELECT * FROM dish WHERE is_available = ?'''
-    cursor_db2.execute(sql_query, ('True',))
+    sql_query = '''SELECT * FROM dish WHERE is_available = True'''
+    cursor_db2.execute(sql_query)
     dishes = cursor_db2.fetchall()
     answer = []
     for dish in dishes:
