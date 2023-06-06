@@ -49,7 +49,7 @@ $ python3 orders/app2.py
 
 ### Ну и напоследок: грозные красные панды пугают друг друга (ฅᨐฅ БУУ! ฅᨐฅ)
 
-![IMAGE 2023-06-06 04:51:17](https://github.com/kamilarakhimova/hse-kpo-hw4/assets/58568615/f85cdfe9-ab68-4d5d-a8f7-1b591cb453b2)
+![IMAGE 2023-06-06 22:32:16](https://github.com/kamilarakhimova/hse-kpo-hw4/assets/58568615/1a06f5e3-6446-4819-b4c6-6fe1e3ac74c4)
 
 
 
