@@ -21,6 +21,8 @@ def greeting():
 def create_order():
     # функция для создания заказа пользователя
     info = request.get_json()
+    if info['user_id'] == "" or info['dishes'] == "" or info['special_requests'] == "":
+        return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
     try:
         user_id, dishes, special_requests = info['user_id'], info['dishes'], info['special_requests']
         created_at = str(datetime.datetime.now())
@@ -35,6 +37,8 @@ def create_order():
         return jsonify({'error': 'Увы, не удаётся найти информацию о Вас :('}), 404
     for dish in dishes:
         # проверяем существование блюда с данным "dish_id"
+        if dish['id'] == "" or dish['quantity'] == "":
+            return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
         try:
             dish_id, dish_quantity = dish['id'], dish['quantity']
         except (TypeError, ValueError, SyntaxError):
@@ -70,7 +74,7 @@ def create_order():
             if dish_available <= 0:
                 cursor_db2.execute("UPDATE dish SET is_available = 'False' WHERE id = ?", (dish_id, ))
             db_lp2.commit()
-        return jsonify({'answer': 'Ура, заказ создан успешно!'}), 201
+        return jsonify({'answer': 'Ура, заказ создан успешно!'}, {'order_id': order_id}), 201
     except Error:
         return jsonify({'answer': 'Увы, не удалось создать Ваш заказ :( Повторите попытку.'}), 400
 
@@ -104,6 +108,8 @@ def process_order():
 def order_info():
     # выдаём информацию о заказе по его "id"
     info = request.get_json()
+    if info['order_id'] == "":
+        return jsonify({'answer': 'Увы, либо поле "order_id" не заполнено, либо заполнено некорректно :( Повторите попытку.'}), 400
     try:
         order_id = info['order_id']
     except (TypeError, ValueError, SyntaxError):
@@ -122,6 +128,8 @@ def order_info():
 def manage_dishes():
     # функция для управления блюдами. доступна только менеджеру
     info = request.get_json()
+    if info['user_id'] == "":
+        return jsonify({'answer': 'Увы, либо поле "user_id" не заполнено, либо заполнено некорректно :( Повторите попытку.'}), 400
     try:
         user_id = info['user_id']
     except (TypeError, ValueError, SyntaxError):
@@ -135,6 +143,8 @@ def manage_dishes():
     if role != 'manager':
         return jsonify({'error': 'Увы, Вы не можете управлять блюдами в связи с Вашей ролью :('}), 405
     if request.method == 'GET':
+        if info['dish_id'] == "":
+            return jsonify({'answer': 'Увы, либо поле "dish_id" не заполнено, либо заполнено некорректно :( Повторите попытку.'}), 400
         try:
             dish_id = info['dish_id']
         except (TypeError, ValueError, SyntaxError):
@@ -148,6 +158,8 @@ def manage_dishes():
             return jsonify({'error': 'Увы, указанное блюдо более не доступно (закончились порции) :('}), 404
         return jsonify({'dish': dish}), 200
     elif request.method == 'POST':
+        if info['name'] == "" or info['description'] == "" or info['price'] == "" or info['quantity'] == "":
+            return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
         try:
             name, description = info['name'], info['description']
             price, quantity = info['price'], info['quantity']
@@ -162,6 +174,8 @@ def manage_dishes():
         db_lp2.commit()
         return jsonify({'answer': 'Ура, блюдо успешно создано!'}), 201
     elif request.method == 'PUT':
+        if info['dish_id'] == "" or info['name'] == "" or info['description'] == "" or info['price'] == "" or info['quantity'] == "":
+            return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
         try:
             dish_id, name, description = info['dish_id'], info['name'], info['description']
             price, quantity = info['price'], info['quantity']
@@ -176,6 +190,8 @@ def manage_dishes():
         db_lp2.commit()
         return jsonify({'answer': 'Ура, блюдо успешно обновлено!'}), 200
     elif request.method == 'DELETE':
+        if info['dish_id'] == "":
+            return jsonify({'answer': 'Увы, либо поле "dish_id" не заполнено, либо заполнено некорректно :( Повторите попытку.'}), 400
         try:
             dish_id = info['dish_id']
         except (TypeError, ValueError, SyntaxError):
