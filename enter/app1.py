@@ -32,6 +32,8 @@ def greeting():
 def registration():
     # функция для регистрации пользователя
     info = request.get_json()
+    if info['username'] == "" or info['password'] == "" or info['email'] == "" or info['role'] == "":
+        return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
     try:
         username, password = info['username'], info['password']
         email, role = info['email'], info['role']
@@ -61,6 +63,8 @@ def registration():
 def authorization():
     # авторизуем пользователя
     info = request.get_json()
+    if info['password'] == "" or info['email'] == "":
+        return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
     try:
         email, password = info['email'], info['password']
     except (TypeError, ValueError, SyntaxError):
