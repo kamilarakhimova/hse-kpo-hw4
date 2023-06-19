@@ -11,6 +11,13 @@ db_lp1 = connect(r'databases/users.db', check_same_thread=False)
 cursor_db1 = db_lp1.cursor()
 
 
+def check_args_existence(data, args):
+    for arg in args:
+        if arg not in data or data[arg] == "":
+            return {'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}
+    return {'answer': 'ok'}
+
+
 @app2.route('/', methods=['GET'])
 def greeting():
     # приветствуем пользователя на микросервисе обработки заказов
@@ -21,14 +28,15 @@ def greeting():
 def create_order():
     # функция для создания заказа пользователя
     info = request.get_json()
-    if info['user_id'] == "" or info['dishes'] == "" or info['special_requests'] == "":
-        return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
-    try:
-        user_id, dishes, special_requests = info['user_id'], info['dishes'], info['special_requests']
-        created_at = str(datetime.datetime.now())
-        status = 'processing'
-    except (TypeError, ValueError, SyntaxError):
-        return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
+    is_ok = check_args_existence(info, ["user_id", "dishes", "special_requests"])
+    if is_ok['answer'] != 'ok':
+        return jsonify(is_ok)
+    user_id, dishes, special_requests = info['user_id'], info['dishes'], info['special_requests']
+    created_at = str(datetime.datetime.now())
+    status = 'processing'
+    # проверяем тип int у user_id
+    if not user_id.is_digit():
+        return jsonify({'answer': 'Увы, поле user_id может представлять из себя только положительное число...'})
     # проверяем существование пользователя с данным "user_id"
     sql_query = '''SELECT * FROM user WHERE id = ?'''
     cursor_db1.execute(sql_query, (user_id, ))
@@ -36,13 +44,15 @@ def create_order():
     if not user:
         return jsonify({'error': 'Увы, не удаётся найти информацию о Вас :('}), 404
     for dish in dishes:
+        is_ok = check_args_existence(dish, ["id", "quantity"])
+        if is_ok['answer'] != 'ok':
+            return jsonify(is_ok)
+        dish_id, dish_quantity = dish['id'], dish['quantity']
+        if not dish_id.is_digit():
+            return jsonify({'answer': 'Увы, поле dish_id может представлять из себя только положительное число...'})
+        if not dish_quantity.is_digit():
+            return jsonify({'answer': 'Увы, поле dish_quantity может представлять из себя только положительное число...'})
         # проверяем существование блюда с данным "dish_id"
-        if dish['id'] == "" or dish['quantity'] == "":
-            return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
-        try:
-            dish_id, dish_quantity = dish['id'], dish['quantity']
-        except (TypeError, ValueError, SyntaxError):
-            return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
         sql_query = '''SELECT * FROM dish WHERE id = ?'''
         cursor_db2.execute(sql_query, (dish_id, ))
         dish_db = cursor_db2.fetchone()
@@ -108,12 +118,12 @@ def process_order():
 def order_info():
     # выдаём информацию о заказе по его "id"
     info = request.get_json()
-    if info['order_id'] == "":
-        return jsonify({'answer': 'Увы, либо поле "order_id" не заполнено, либо заполнено некорректно :( Повторите попытку.'}), 400
-    try:
-        order_id = info['order_id']
-    except (TypeError, ValueError, SyntaxError):
-        return jsonify({'answer': 'Увы, либо поле "order_id" не заполнено, либо заполнено некорректно :( Повторите попытку.'}), 400
+    is_ok = check_args_existence(info, ["order_id"])
+    if is_ok['answer'] != 'ok':
+        return jsonify(is_ok)
+    order_id = info['order_id']
+    if not order_id.is_digit():
+        return jsonify({'answer': 'Увы, поле order_id может представлять из себя только положительное число...'})
     sql_query = '''SELECT * FROM orders WHERE id = ?'''
     cursor_db2.execute(sql_query, (order_id, ))
     order = cursor_db2.fetchone()
@@ -128,12 +138,12 @@ def order_info():
 def manage_dishes():
     # функция для управления блюдами. доступна только менеджеру
     info = request.get_json()
-    if info['user_id'] == "":
-        return jsonify({'answer': 'Увы, либо поле "user_id" не заполнено, либо заполнено некорректно :( Повторите попытку.'}), 400
-    try:
-        user_id = info['user_id']
-    except (TypeError, ValueError, SyntaxError):
-        return jsonify({'answer': 'Увы, либо поле "user_id" не заполнено, либо заполнено некорректно :( Повторите попытку.'}), 400
+    is_ok = check_args_existence(info, ["user_id"])
+    if is_ok['answer'] != 'ok':
+        return jsonify(is_ok)
+    user_id = info['user_id']
+    if not user_id.is_digit():
+        return jsonify({'answer': 'Увы, поле user_id может представлять из себя только положительное число...'})
     sql_query = '''SELECT * FROM user WHERE id = ?'''
     cursor_db1.execute(sql_query, (user_id,))
     user = cursor_db1.fetchone()
@@ -143,12 +153,12 @@ def manage_dishes():
     if role != 'manager':
         return jsonify({'error': 'Увы, Вы не можете управлять блюдами в связи с Вашей ролью :('}), 405
     if request.method == 'GET':
-        if info['dish_id'] == "":
-            return jsonify({'answer': 'Увы, либо поле "dish_id" не заполнено, либо заполнено некорректно :( Повторите попытку.'}), 400
-        try:
-            dish_id = info['dish_id']
-        except (TypeError, ValueError, SyntaxError):
-            return jsonify({'answer': 'Увы, либо поле "dish_id" не заполнено, либо заполнено некорректно :( Повторите попытку.'}), 400
+        is_ok = check_args_existence(info, ["dish_id"])
+        if is_ok['answer'] != 'ok':
+            return jsonify(is_ok)
+        dish_id = info['dish_id']
+        if not dish_id.is_digit():
+            return jsonify({'answer': 'Увы, поле dish_id может представлять из себя только положительное число...'})
         sql_query = '''SELECT * FROM dish WHERE id = ?'''
         cursor_db2.execute(sql_query, (dish_id,))
         dish = cursor_db2.fetchone()
@@ -158,13 +168,15 @@ def manage_dishes():
             return jsonify({'error': 'Увы, указанное блюдо более не доступно (закончились порции) :('}), 404
         return jsonify({'dish': dish}), 200
     elif request.method == 'POST':
-        if info['name'] == "" or info['description'] == "" or info['price'] == "" or info['quantity'] == "":
-            return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
-        try:
-            name, description = info['name'], info['description']
-            price, quantity = info['price'], info['quantity']
-        except (TypeError, ValueError, SyntaxError):
-            return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
+        is_ok = check_args_existence(info, ["name", "description", "price", "quantity"])
+        if is_ok['answer'] != 'ok':
+            return jsonify(is_ok)
+        name, description = info['name'], info['description']
+        price, quantity = info['price'], info['quantity']
+        if not price.is_digit():
+            return jsonify({'answer': 'Увы, поле price может представлять из себя только положительное число...'})
+        if not quantity.is_digit():
+            return jsonify({'answer': 'Увы, поле quantity может представлять из себя только положительное число...'})
         is_available = False
         if quantity > 0:
             is_available = True
@@ -174,13 +186,22 @@ def manage_dishes():
         db_lp2.commit()
         return jsonify({'answer': 'Ура, блюдо успешно создано!'}), 201
     elif request.method == 'PUT':
-        if info['dish_id'] == "" or info['name'] == "" or info['description'] == "" or info['price'] == "" or info['quantity'] == "":
-            return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
-        try:
-            dish_id, name, description = info['dish_id'], info['name'], info['description']
-            price, quantity = info['price'], info['quantity']
-        except (TypeError, ValueError, SyntaxError):
-            return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
+        is_ok = check_args_existence(info, ["name", "description", "price", "quantity", "dish_id"])
+        if is_ok['answer'] != 'ok':
+            return jsonify(is_ok)
+        dish_id, name, description = info['dish_id'], info['name'], info['description']
+        price, quantity = info['price'], info['quantity']
+        if not dish_id.is_digit():
+            return jsonify({'answer': 'Увы, поле dish_id может представлять из себя только положительное число...'})
+        if not price.is_digit():
+            return jsonify({'answer': 'Увы, поле price может представлять из себя только положительное число...'})
+        if not quantity.is_digit():
+            return jsonify({'answer': 'Увы, поле quantity может представлять из себя только положительное число...'})
+        sql_query = '''SELECT * FROM dish WHERE id = ?'''
+        cursor_db2.execute(sql_query, (dish_id,))
+        dish = cursor_db2.fetchone()
+        if not dish:
+            return jsonify({'error': 'Увы, не удаётся найти указанное блюдо :('}), 404
         is_available = False
         if quantity > 0:
             is_available = True
@@ -190,12 +211,12 @@ def manage_dishes():
         db_lp2.commit()
         return jsonify({'answer': 'Ура, блюдо успешно обновлено!'}), 200
     elif request.method == 'DELETE':
-        if info['dish_id'] == "":
-            return jsonify({'answer': 'Увы, либо поле "dish_id" не заполнено, либо заполнено некорректно :( Повторите попытку.'}), 400
-        try:
-            dish_id = info['dish_id']
-        except (TypeError, ValueError, SyntaxError):
-            return jsonify({'answer': 'Увы, либо поле "dish_id" не заполнено, либо заполнено некорректно :( Повторите попытку.'}), 400
+        is_ok = check_args_existence(info, ["dish_id"])
+        if is_ok['answer'] != 'ok':
+            return jsonify(is_ok)
+        dish_id = info['dish_id']
+        if not dish_id.is_digit():
+            return jsonify({'answer': 'Увы, поле dish_id может представлять из себя только положительное число...'})
         sql_query = '''SELECT * FROM dish WHERE id = ?'''
         cursor_db2.execute(sql_query, (dish_id, ))
         dish = cursor_db2.fetchone()
