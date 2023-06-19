@@ -22,6 +22,13 @@ def get_hash(word):
     return sha256(word.encode('utf-8')).hexdigest()
 
 
+def check_args_existence(data, args):
+    for arg in args:
+        if arg not in data or data[arg] == "":
+            return {'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}
+    return {'answer': 'ok'}
+
+
 @app1.route('/', methods=['GET'])
 def greeting():
     # приветствуем пользователя на микросервисе авторизации
@@ -32,13 +39,11 @@ def greeting():
 def registration():
     # функция для регистрации пользователя
     info = request.get_json()
-    if info['username'] == "" or info['password'] == "" or info['email'] == "" or info['role'] == "":
-        return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
-    try:
-        username, password = info['username'], info['password']
-        email, role = info['email'], info['role']
-    except (TypeError, ValueError, SyntaxError):
-        return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
+    is_ok = check_args_existence(info, ["username", "password", "email", "role"])
+    if is_ok['answer'] != 'ok':
+        return jsonify(is_ok)
+    username, password = info['username'], info['password']
+    email, role = info['email'], info['role']
     # проверяем email на валидность
     if not is_email_valid(email):
         return jsonify({'answer': 'Увы, адрес электронной почты некорректен :( Повторите попытку.'}), 400
@@ -63,12 +68,10 @@ def registration():
 def authorization():
     # авторизуем пользователя
     info = request.get_json()
-    if info['password'] == "" or info['email'] == "":
-        return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
-    try:
-        email, password = info['email'], info['password']
-    except (TypeError, ValueError, SyntaxError):
-        return jsonify({'answer': 'Увы, либо не все поля заполнены, либо заполнены некорректно :( Повторите попытку.'}), 400
+    is_ok = check_args_existence(info, ["password", "email"])
+    if is_ok['answer'] != 'ok':
+        return jsonify(is_ok)
+    email, password = info['email'], info['password']
     try:
         sql_query = '''SELECT * FROM user WHERE email = ?'''
         cursor_db1.execute(sql_query, (email, ))
@@ -94,6 +97,9 @@ def authorization():
 def user_info():
     # выдаём информацию о пользователе по токену
     session_token = request.get_json()
+    is_ok = check_args_existence(session_token, ["jwt token"])
+    if is_ok['answer'] != 'ok':
+        return jsonify(is_ok)
     token = session_token['jwt token']
     sql_query = '''
     SELECT curr_u.id, curr_u.username, curr_u.email, curr_u.role, curr_u.created_at
