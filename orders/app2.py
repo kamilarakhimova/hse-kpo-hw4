@@ -35,7 +35,7 @@ def create_order():
     created_at = str(datetime.datetime.now())
     status = 'processing'
     # проверяем тип int у user_id
-    if not user_id.is_digit():
+    if not user_id.isdigit():
         return jsonify({'answer': 'Увы, поле user_id может представлять из себя только положительное число...'})
     # проверяем существование пользователя с данным "user_id"
     sql_query = '''SELECT * FROM user WHERE id = ?'''
@@ -48,10 +48,11 @@ def create_order():
         if is_ok['answer'] != 'ok':
             return jsonify(is_ok)
         dish_id, dish_quantity = dish['id'], dish['quantity']
-        if not dish_id.is_digit():
+        if not dish_id.isdigit():
             return jsonify({'answer': 'Увы, поле dish_id может представлять из себя только положительное число...'})
-        if not dish_quantity.is_digit():
+        if not dish_quantity.isdigit():
             return jsonify({'answer': 'Увы, поле dish_quantity может представлять из себя только положительное число...'})
+        dish_quantity = int(dish_quantity)
         # проверяем существование блюда с данным "dish_id"
         sql_query = '''SELECT * FROM dish WHERE id = ?'''
         cursor_db2.execute(sql_query, (dish_id, ))
@@ -80,6 +81,7 @@ def create_order():
             sql_insert = '''INSERT INTO order_dish (order_id, dish_id, quantity, price) VALUES (?, ?, ?, ?)'''
             cursor_db2.execute(sql_insert, (order_id, dish_id, dish_quantity, price))
             cursor_db2.execute("UPDATE dish SET quantity = quantity - ? WHERE id = ?", (dish_quantity, dish_id))
+            dish_quantity = int(dish_quantity)
             dish_available = dish_info[-1][4] - dish_quantity
             if dish_available <= 0:
                 cursor_db2.execute("UPDATE dish SET is_available = 'False' WHERE id = ?", (dish_id, ))
@@ -122,7 +124,7 @@ def order_info():
     if is_ok['answer'] != 'ok':
         return jsonify(is_ok)
     order_id = info['order_id']
-    if not order_id.is_digit():
+    if not order_id.isdigit():
         return jsonify({'answer': 'Увы, поле order_id может представлять из себя только положительное число...'})
     sql_query = '''SELECT * FROM orders WHERE id = ?'''
     cursor_db2.execute(sql_query, (order_id, ))
@@ -142,7 +144,7 @@ def manage_dishes():
     if is_ok['answer'] != 'ok':
         return jsonify(is_ok)
     user_id = info['user_id']
-    if not user_id.is_digit():
+    if not user_id.isdigit():
         return jsonify({'answer': 'Увы, поле user_id может представлять из себя только положительное число...'})
     sql_query = '''SELECT * FROM user WHERE id = ?'''
     cursor_db1.execute(sql_query, (user_id,))
@@ -157,7 +159,7 @@ def manage_dishes():
         if is_ok['answer'] != 'ok':
             return jsonify(is_ok)
         dish_id = info['dish_id']
-        if not dish_id.is_digit():
+        if not dish_id.isdigit():
             return jsonify({'answer': 'Увы, поле dish_id может представлять из себя только положительное число...'})
         sql_query = '''SELECT * FROM dish WHERE id = ?'''
         cursor_db2.execute(sql_query, (dish_id,))
@@ -173,10 +175,12 @@ def manage_dishes():
             return jsonify(is_ok)
         name, description = info['name'], info['description']
         price, quantity = info['price'], info['quantity']
-        if not price.is_digit():
+        if not price.isdigit():
             return jsonify({'answer': 'Увы, поле price может представлять из себя только положительное число...'})
-        if not quantity.is_digit():
+        price  = int(price)
+        if not quantity.isdigit():
             return jsonify({'answer': 'Увы, поле quantity может представлять из себя только положительное число...'})
+        quantity = int(quantity)
         is_available = False
         if quantity > 0:
             is_available = True
@@ -191,12 +195,14 @@ def manage_dishes():
             return jsonify(is_ok)
         dish_id, name, description = info['dish_id'], info['name'], info['description']
         price, quantity = info['price'], info['quantity']
-        if not dish_id.is_digit():
+        if not dish_id.isdigit():
             return jsonify({'answer': 'Увы, поле dish_id может представлять из себя только положительное число...'})
-        if not price.is_digit():
+        if not price.isdigit():
             return jsonify({'answer': 'Увы, поле price может представлять из себя только положительное число...'})
-        if not quantity.is_digit():
+        price = int(price)
+        if not quantity.isdigit():
             return jsonify({'answer': 'Увы, поле quantity может представлять из себя только положительное число...'})
+        quantity = int(quantity)
         sql_query = '''SELECT * FROM dish WHERE id = ?'''
         cursor_db2.execute(sql_query, (dish_id,))
         dish = cursor_db2.fetchone()
@@ -215,7 +221,7 @@ def manage_dishes():
         if is_ok['answer'] != 'ok':
             return jsonify(is_ok)
         dish_id = info['dish_id']
-        if not dish_id.is_digit():
+        if not dish_id.isdigit():
             return jsonify({'answer': 'Увы, поле dish_id может представлять из себя только положительное число...'})
         sql_query = '''SELECT * FROM dish WHERE id = ?'''
         cursor_db2.execute(sql_query, (dish_id, ))
